@@ -1,0 +1,90 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Catalyst checklist 2025-09-26 06:05</title>
+<style>
+  body{font:15px/1.4 -apple-system,system-ui,Segoe UI,Roboto,Arial;padding:14px;background:#fff;color:#111}
+  .bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+  input[type="search"]{flex:1;min-width:160px;padding:8px 10px;border:1px solid #ccc;border-radius:10px}
+  button{padding:8px 10px;border:1px solid #ccc;border-radius:10px;background:#fff;cursor:pointer}
+  button:hover{background:#f5f5f5}
+  .count{margin-left:auto;opacity:.75}
+  ul{list-style:none;margin:0;padding:0}
+  li{display:flex;align-items:flex-start;gap:8px;padding:8px;border-bottom:1px solid #eee}
+  li.done{opacity:.55;text-decoration:line-through}
+  .pts{margin-left:auto;font-weight:600}
+  .small{font-size:12px;opacity:.7}
+</style>
+</head>
+<body>
+<h1 style="margin:0 0 8px 0;font-size:18px">Catalyst checklist 2025-09-26 06:05</h1>
+<div class="bar">
+  <input id="q" type="search" placeholder="Search tasks..."/>
+  <button id="clear">Clear completed</button>
+  <button id="reset">Uncheck all</button>
+  <span id="count" class="count small"></span>
+</div>
+<ul id="list"></ul>
+<script>
+  const APP_ID = "catalyst_checklist_r53838";
+  const INITIAL = [{"id":"19","title":"Make a waka canoe near Edgeville.","points":80},{"id":"585","title":"Get Stiles to exchange some of your fish for bank notes.","points":30},{"id":"530","title":"Mine 200 soft clay in Prifddinas.","points":30},{"id":"890","title":"Obtain 125 Quest Points.","points":200},{"id":"576","title":"Catch a Karambwanji.","points":10},{"id":"126","title":"Bake a summer pie in the Cooking Guild from scratch.","points":200},{"id":"543","title":"Equip a Crystal shield.","points":80},{"id":"34","title":"Complete the quest: Duck Quest.","points":30},{"id":"694","title":"Craft your own snelm in Morytania.","points":10},{"id":"31","title":"Enter Zanaris via Lumbridge Swamp.","points":80},{"id":"956","title":"Complete an Elite clue scroll.","points":80},{"id":"63","title":"Craft some spirit or bone runes.","points":10},{"id":"574","title":"Claim a ticket from Brimhaven Agility Arena.","points":10},{"id":"869","title":"Craft some Combination runes.","points":30},{"id":"54","title":"Use the range in Lumbridge Castle to bake a cake.","points":30},{"id":"775","title":"Make a Necromancy Potion.","points":10},{"id":"120","title":"Defeat the Arch-Glacor.","points":80},{"id":"231","title":"Steal some Wine of Zamorak from the Captured Temple, south of Goblin Village.","points":30},{"id":"424","title":"Defeat a Fire Giant in Kandarin.","points":30},{"id":"847","title":"Fletch 50 Maple shieldbow (unstrung).","points":30},{"id":"839","title":"Make 30 Prayer Potions.","points":30},{"id":"703","title":"Visit Dragontooth Island by boat.","points":10},{"id":"415","title":"Fletch 50 Maple shieldbow (unstrung) in Kandarin.","points":30},{"id":"413","title":"Use a ring of duelling to teleport to Castle Wars.","points":10},{"id":"650","title":"Defeat 20 Bound Skeletons.","points":30},{"id":"348","title":"Move Your House to Rellekka.","points":30},{"id":"364","title":"Travel to the Mammoth Iceberg.","points":30},{"id":"342","title":"Defeat a Troll in the Fremennik Province.","points":10},{"id":"862","title":"Make a Chocolate Cake.","points":30},{"id":"583","title":"Craft 50 Nature runes.","points":30},{"id":"861","title":"Make a Stew.","points":30},{"id":"927","title":"Fletch 35 or more arrow shafts from a single log.","points":80},{"id":"716","title":"Catch 10 Green salamanders.","points":30},{"id":"929","title":"Fletch 750 Rune arrows.","points":80},{"id":"52","title":"Craft 50 cosmic runes.","points":30},{"id":"286","title":"Defeat the Kalphite Queen.","points":30},{"id":"360","title":"Defeat any of the Dagannoth Kings.","points":30},{"id":"945","title":"Complete 5 Soul Reaper tasks.","points":80},{"id":"293","title":"Catch a catfish.","points":30},{"id":"882","title":"Create a Mithril Grapple.","points":30},{"id":"843","title":"Clean 50 Grimy Avantoe.","points":30},{"id":"926","title":"Fletch a Rune Crossbow.","points":80},{"id":"860","title":"Make a Pineapple pizza.","points":30}];
+  const KEY = 'chk_' + APP_ID;
+
+  let state = loadState();
+
+  function loadState(){
+    try { return JSON.parse(localStorage.getItem(KEY) || '{}'); } catch(e){ return {}; }
+  }
+  function saveState(){ localStorage.setItem(KEY, JSON.stringify(state)); }
+
+  function render(filter=''){
+    const ul = document.getElementById('list');
+    ul.innerHTML = '';
+    const q = filter.trim().toLowerCase();
+    let shown = 0, done = 0;
+    for (const it of INITIAL) {
+      if (q && !it.title.toLowerCase().includes(q)) continue;
+      shown++;
+      const li = document.createElement('li');
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.checked = !!state[it.id];
+      cb.onchange = () => { state[it.id] = cb.checked; saveState(); li.classList.toggle('done', cb.checked); updateCount(); };
+      const span = document.createElement('span');
+      span.textContent = it.title;
+      const pts = document.createElement('span');
+      pts.className = 'pts';
+      pts.textContent = it.points ? ('+' + it.points) : '';
+      li.appendChild(cb); li.appendChild(span); li.appendChild(pts);
+      li.classList.toggle('done', cb.checked);
+      if (cb.checked) done++;
+      ul.appendChild(li);
+    }
+    updateCount(shown, done);
+  }
+
+  function updateCount(shown, done){
+    if (shown == null) {
+      // recompute quickly
+      const items = Array.from(document.querySelectorAll('#list li'));
+      shown = items.length;
+      done = items.filter(li => li.classList.contains('done')).length;
+    }
+    document.getElementById('count').textContent = shown + ' shown • ' + done + ' completed';
+  }
+
+  document.getElementById('q').addEventListener('input', (e)=>render(e.target.value));
+  document.getElementById('clear').onclick = ()=>{
+    for (const k of Object.keys(state)) if (state[k]) delete state[k];
+    saveState(); render(document.getElementById('q').value);
+  };
+  document.getElementById('reset').onclick = ()=>{
+    state = {}; saveState(); render(document.getElementById('q').value);
+  };
+
+  render('');
+</script>
+</body>
+</html>
